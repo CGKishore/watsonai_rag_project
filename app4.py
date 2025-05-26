@@ -225,3 +225,6 @@ def rag_chat():
         query= result["query"]
     return render_template('rag_chat.html', response=response,query=query)
 
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
