@@ -15,7 +15,7 @@ app.secret_key = 'your-secret-key'
 app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
 
 
-embedding_model = SentenceTransformerEmbeddings(model_name="model")
+embedding_model = SentenceTransformerEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 
 
