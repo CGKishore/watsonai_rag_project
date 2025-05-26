@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 from werkzeug.utils import secure_filename
 from langchain.vectorstores import FAISS
-from langchain_community.embeddings import SentenceTransformerEmbeddings
-from langchain_google_genai import GoogleGenerativeAI
+from langchain_google_genai import GoogleGenerativeAI,GoogleGenerativeAIEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain.document_loaders import PyPDFLoader, Docx2txtLoader
@@ -15,11 +14,11 @@ app.secret_key = 'your-secret-key'
 app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
 
 
-embedding_model = SentenceTransformerEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
-
 
 os.environ["GOOGLE_API_KEY"] = "AIzaSyCdX5TgCOAgBHaloRCykw5RBNmgK-NP_d8"
+
+embedding_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+
 llm = GoogleGenerativeAI(model="models/gemini-2.0-flash")
 
 
