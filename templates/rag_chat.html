@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ask from Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .background {
+            background-image: url("{{ url_for('static', filename='blue.png') }}");
+            background-size: cover;
+            background-position: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+
+        .main-content {
+            padding: 20px;
+            height: calc(100% - 160px);
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .response-box {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            padding: 15px 20px;
+            max-width: 800px;
+            margin: 20px auto;
+            white-space: pre-line;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+         .Welcome-class{
+            color: white;
+            text-align: center;
+            margin-top: 10%;
+        }
+        .chat-input-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 800px;
+            padding: 0 20px;
+            z-index: 20;
+        }
+
+        .chat-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            max-height: 200px;
+            padding: 15px 60px 15px 15px;
+            font-size: 16px;
+            resize: vertical;
+            border: none;
+            border-radius: 25px;
+            background-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #aaa transparent;
+            color: #000;
+        }
+
+        textarea::placeholder {
+            color: #444;
+        }
+
+        textarea::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        textarea::-webkit-scrollbar-thumb {
+            background-color: #aaa;
+            border-radius: 10px;
+        }
+
+        button {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: rgb(106, 175, 218);
+            color: white;
+            font-size: 20px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            background-color: #042548;
+        }
+
+         #listening-indicator {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #245b8e;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: none;
+            z-index: 99;
+        }
+
+        @media screen and (max-width: 600px) {
+            textarea {
+                min-height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+
+    <div class="main-content">
+        {% if response %}
+            <div class="response-box">
+                <strong>query</strong><br>{{ Question }}
+                <strong>Response:</strong><br>{{ Response }}
+            </div>
+</div>
+        {% else %}
+    
+            <div class="Welcome-class">
+                <h1>📄 Welcome to Document Q&A Assistant</h2><br>
+            <h1> Ask questions related to the Document and out of the Document</h2><br>
+                <h1>Get instant, accurate answers using AI</h1>
+                <h1></h1>
+                <br><br>
+            </div>
+        {% endif %}
+    
+
+    <div class="chat-input-container">
+        <form method="POST" class="chat-input-wrapper">
+            <textarea name="que" placeholder="Ask something from your document..." required></textarea>
+            <button type="submit">&#10148;</button>
+        </form>
+    </div>
+
+
+    <div id="listening-indicator">Listening...</div>
+
+
+    <script>
+        const textarea = document.querySelector("textarea");
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            const mic = document.createElement("button");
+            mic.innerHTML = "🎙️";
+            mic.style.position = "absolute";
+            mic.style.left = "10px";
+            mic.style.bottom = "10px";
+            mic.style.width = "45px";
+            mic.style.height = "45px";
+            mic.style.borderRadius = "50%";
+            mic.style.backgroundColor = "#245b8e";
+            mic.style.color = "white";
+            mic.style.fontSize = "20px";
+            mic.style.border = "none";
+            mic.style.cursor = "pointer";
+            mic.title = "Start voice input";
+
+            const wrapper = document.querySelector(".chat-input-wrapper");
+            wrapper.appendChild(mic);
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = "en-US";
+            recognition.interimResults = false;
+
+            const listeningIndicator = document.getElementById("listening-indicator");
+
+            mic.addEventListener("click", () => {
+                recognition.start();
+                listeningIndicator.style.display = "block";
+            });
+
+            recognition.addEventListener("result", (event) => {
+                const transcript = event.results[0][0].transcript;
+                textarea.value += transcript + " ";
+            });
+
+            recognition.addEventListener("end", () => {
+                textarea.focus();
+                listeningIndicator.style.display = "none";
+            });
+        }
+
+        if (window.performance && window.performance.navigation.type === 2) {
+            window.location.href = "/";
+        }
+        history.pushState(null, null, location.href);
+        window.onpopstate = function () {
+            window.location.href = "/";
+        };
+    </script>
+</body>
+</html>

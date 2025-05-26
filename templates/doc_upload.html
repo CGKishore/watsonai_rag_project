@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+       height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: url("{{ url_for('static', filename='robo2.png') }}") no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+    }
+
+    .container {
+        background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+        
+            border-radius: 20px;
+            width: 450px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            text-align: center;
+            margin-top: 3%;
+            margin-left: 7%;
+        }
+    
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color:white;
+    }
+
+    .file-box {
+      border: 2px dashed white;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 30px;
+      border-radius: 8px;
+      transition: background 0.3s, border-color 0.3s;
+      position: relative;
+    }
+
+    .file-box:hover {
+      background:rgb(21, 202, 223);
+    }
+
+    .file-box.dragover {
+      border-color: rgb(21, 202, 223);
+      background-color: black;
+    }
+
+    .file-box.file-selected {
+      border-color:rgb(21, 202, 223);
+      background-color:black;
+    }
+
+    .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+
+    .error {
+      color: #d9534f;
+      margin-top: 10px;
+    }
+
+    #status-message {
+      margin-top: 10px;
+      color: #28a745;
+      font-weight: 500;
+    }
+
+    #loader {
+      display: none;
+      margin-top: 10px;
+      color: #007bff;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:disabled {
+      background: #6c757d;
+    }
+
+    button:hover:not(:disabled) {
+      background: #0056b3;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Upload Your Document</h2>
+    <p><strong>Instructions:</strong></p>
+    <p>• Upload a `.pdf`, `.doc`, or `.docx` file below.<br>
+        • Drag and drop or click to browse.<br>
+        • It will auto-upload and process.<br>
+        • It take some time to process the document please be patient</p>
+
+
+  <form id="upload-form" enctype="multipart/form-data" method="POST">
+    <div id="file-selector" class="file-box">
+      <span id="file-selector-text">Click or drag file here</span>
+      <input type="file" id="file-input" name="file" accept=".pdf,.doc,.docx" />
+    </div>
+    <button type="submit" id="submit-button">Upload</button>
+    <div id="loader">Uploading...</div>
+    <div id="status-message"></div>
+  </form>
+  <a href="{{ url_for('home') }}" class="back-link">← Back to Home</a>
+</div>
+
+<script>
+  const fileSelector = document.getElementById('file-selector');
+  const fileSelectorText = document.getElementById('file-selector-text');
+  const fileInput = document.getElementById('file-input');
+  const form = document.getElementById('upload-form');
+  const loader = document.getElementById('loader');
+  const statusMessage = document.getElementById('status-message');
+  const submitButton = document.getElementById('submit-button');
+
+  // Trigger input when box is clicked
+  fileSelector.addEventListener('click', (e) => {
+    if (e.target === fileSelector || e.target === fileSelectorText) {
+      fileInput.click();
+    }
+  });
+
+  // File selection handler
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      fileSelectorText.textContent = `Selected: ${file.name}`;
+      fileSelector.classList.add('file-selected');
+      statusMessage.textContent = "";
+      statusMessage.classList.remove('error');
+    }
+  });
+
+  // Drag & Drop Events
+  ['dragenter', 'dragover'].forEach(event => {
+    fileSelector.addEventListener(event, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      fileSelector.classList.add('dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(event => {
+    fileSelector.addEventListener(event, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      fileSelector.classList.remove('dragover');
+    });
+  });
+
+  fileSelector.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      fileInput.files = files;
+      const file = files[0];
+      fileSelectorText.textContent = `Selected: ${file.name}`;
+      fileSelector.classList.add('file-selected');
+      statusMessage.textContent = "";
+      statusMessage.classList.remove('error');
+    }
+  });
+
+  // Form Submission
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    statusMessage.textContent = "";
+    statusMessage.classList.remove('error');
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+      statusMessage.textContent = "Please select a file first.";
+      statusMessage.classList.add('error');
+      return;
+    }
+
+    submitButton.disabled = true;
+    loader.style.display = "block";
+
+    try {
+      const formData = new FormData(form);
+      const response = await fetch("{{ url_for('process_doc1') }}", {
+        method: "POST",
+        body: formData
+      });
+
+      if (response.redirected) {
+        window.location.href = response.url;
+        return;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Upload failed');
+      }
+
+      form.reset();
+      fileSelectorText.textContent = "Click or drag file here";
+      fileSelector.classList.remove('file-selected');
+      statusMessage.textContent = "Document uploaded successfully!";
+    } catch (error) {
+      statusMessage.textContent = "Upload failed: " + error.message;
+      statusMessage.classList.add('error');
+    } finally {
+      loader.style.display = "none";
+      submitButton.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>
