@@ -225,6 +225,3 @@ def rag_chat():
         query= result["query"]
     return render_template('rag_chat.html', response=response,query=query)
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
