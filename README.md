@@ -1,5 +1,5 @@
-- App name:WatsonDocBot
-- App link:https://watsonai-rag-project.onrender.com
+- Application name:WatsonDocBot
+- Application link:https://watsonai-rag-project.onrender.com
 - Git hub repository link:https://github.com/CGKishore/watsonai_rag_project
 
 
