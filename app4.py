@@ -1,12 +1,12 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 from werkzeug.utils import secure_filename
 from langchain.vectorstores import FAISS
-from langchain_google_genai import GoogleGenerativeAI,GoogleGenerativeAIEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain.document_loaders import PyPDFLoader, Docx2txtLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
+from langchain_ibm import WatsonxLLM,WatsonxEmbeddings
 import tempfile
 
 app = Flask(__name__)
@@ -14,12 +14,26 @@ app.secret_key = 'your-secret-key'
 app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
 
 
+os.environ["WATSONX_API_KEY"] = "VlVBKGHpDl9DOrHLm59KzDF5AqqYcTkk9-A2qkxbnm1-"
 
-os.environ["GOOGLE_API_KEY"] = "AIzaSyCdX5TgCOAgBHaloRCykw5RBNmgK-NP_d8"
+project_id="5e7fa573-9f0c-4215-8ccc-cbcfc488b893"
 
-embedding_model = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+embedding_model = WatsonxEmbeddings(
+    model_id="ibm/slate-125m-english-rtrvr",  # your embedding model
+    apikey=os.environ["WATSONX_API_KEY"],
+    url="https://us-south.ml.cloud.ibm.com",  # your WatsonX instance URL
+    project_id=project_id
+)
 
-llm = GoogleGenerativeAI(model="models/gemini-2.0-flash")
+
+
+llm = WatsonxLLM(
+    apikey=os.environ["WATSONX_API_KEY"],
+    model_id="ibm/granite-3-2-8b-instruct",
+    project_id=project_id,
+    url="https://us-south.ml.cloud.ibm.com",
+    params={"max_new_tokens": 1024}
+)
 
 
 prompt_template1 = PromptTemplate(
@@ -223,6 +237,7 @@ def rag_chat():
         response = result["result"]
         query= result["query"]
     return render_template('rag_chat.html', response=response,query=query)
+
 
 
 
